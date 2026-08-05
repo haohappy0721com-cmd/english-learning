@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Mastery - Learn English Online</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="#" class="nav-logo">English Mastery</a>
+    <ul class="nav-menu">
+      <li><a href="#" data-page="dashboard" class="nav-link active">Dashboard</a></li>
+      <li><a href="#" data-page="vocabulary" class="nav-link">Vocabulary</a></li>
+      <li><a href="#" data-page="grammar" class="nav-link">Grammar</a></li>
+      <li><a href="#" data-page="reading" class="nav-link">Reading</a></li>
+      <li><a href="#" data-page="quiz" class="nav-link">Quiz</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+  </div>
+</nav>
+
+<main class="main-content">
+
+  <!-- Dashboard Page -->
+  <section id="dashboard" class="page active">
+    <div class="hero">
+      <h1>Master English,<br>One Day at a Time</h1>
+      <p>Build your vocabulary, improve your grammar, and boost your reading skills.</p>
+    </div>
+
+    <div class="word-of-day card">
+      <span class="badge">Word of the Day</span>
+      <h2 id="wotd-word">persevere</h2>
+      <p class="phonetic" id="wotd-phonetic">/ˌpɜːrsəˈvɪr/</p>
+      <p class="definition" id="wotd-definition">坚持；不屈不挠</p>
+      <p class="example" id="wotd-example">"She persevered through difficult times and eventually succeeded."</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card card">
+        <div class="stat-number" id="stat-vocab">0</div>
+        <div class="stat-label">Words Learned</div>
+      </div>
+      <div class="stat-card card">
+        <div class="stat-number" id="stat-streak">0</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+      <div class="stat-card card">
+        <div class="stat-number" id="stat-quizzes">0</div>
+        <div class="stat-label">Quizzes Completed</div>
+      </div>
+      <div class="stat-card card">
+        <div class="stat-number" id="stat-accuracy">0%</div>
+        <div class="stat-label">Overall Accuracy</div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="btn btn-primary" data-goto="vocabulary">Study Vocabulary</button>
+      <button class="btn btn-secondary" data-goto="grammar">Practice Grammar</button>
+      <button class="btn btn-accent" data-goto="quiz">Take a Quiz</button>
+    </div>
+  </section>
+
+  <!-- Vocabulary Page -->
+  <section id="vocabulary" class="page">
+    <div class="page-header">
+      <h2>Vocabulary Builder</h2>
+      <p>Flip the cards to learn new words. Mark them as learned when you're ready.</p>
+    </div>
+
+    <div class="category-tabs" id="vocab-categories"></div>
+
+    <div class="flashcard-container">
+      <div class="flashcard" id="flashcard">
+        <div class="flashcard-inner">
+          <div class="flashcard-front">
+            <span class="card-badge" id="card-level"></span>
+            <h3 id="card-word"></h3>
+            <p class="card-phonetic" id="card-phonetic"></p>
+            <p class="card-hint">Click to reveal</p>
+          </div>
+          <div class="flashcard-back">
+            <p class="card-pos" id="card-pos"></p>
+            <p class="card-meaning" id="card-meaning"></p>
+            <p class="card-example" id="card-example"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flashcard-controls">
+        <button class="btn btn-outline" id="btn-prev-word">Previous</button>
+        <span class="card-counter" id="card-counter">1 / 10</span>
+        <button class="btn btn-outline" id="btn-next-word">Next</button>
+        <button class="btn btn-success" id="btn-learned">I Know This</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grammar Page -->
+  <section id="grammar" class="page">
+    <div class="page-header">
+      <h2>Grammar Practice</h2>
+      <p>Choose the correct answer for each question. Instant feedback provided.</p>
+    </div>
+
+    <div class="category-tabs" id="grammar-categories"></div>
+
+    <div class="quiz-card card" id="grammar-quiz">
+      <div class="quiz-progress">
+        <div class="progress-bar"><div class="progress-fill" id="grammar-progress-fill"></div></div>
+        <span class="quiz-counter" id="grammar-counter">1 / 10</span>
+      </div>
+      <h3 id="grammar-question"></h3>
+      <div class="options-grid" id="grammar-options"></div>
+      <div class="quiz-feedback" id="grammar-feedback"></div>
+      <button class="btn btn-primary" id="grammar-next" style="display:none">Next Question</button>
+    </div>
+  </section>
+
+  <!-- Reading Page -->
+  <section id="reading" class="page">
+    <div class="page-header">
+      <h2>Reading Comprehension</h2>
+      <p>Read the passage carefully and answer the questions that follow.</p>
+    </div>
+
+    <div class="category-tabs" id="reading-categories"></div>
+
+    <div class="reading-layout">
+      <div class="reading-passage card" id="reading-passage">
+        <h3 id="reading-title"></h3>
+        <div id="reading-content"></div>
+      </div>
+      <div class="reading-questions card" id="reading-questions-container">
+        <div class="quiz-progress">
+          <div class="progress-bar"><div class="progress-fill" id="reading-progress-fill"></div></div>
+          <span class="quiz-counter" id="reading-counter">1 / 5</span>
+        </div>
+        <h4 id="reading-question"></h4>
+        <div class="options-grid" id="reading-options"></div>
+        <div class="quiz-feedback" id="reading-feedback"></div>
+        <button class="btn btn-primary" id="reading-next" style="display:none">Next Question</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz Page -->
+  <section id="quiz" class="page">
+    <div class="page-header">
+      <h2>Quick Quiz</h2>
+      <p>Mixed questions from vocabulary, grammar, and reading. Test your overall English skills!</p>
+    </div>
+
+    <div class="quiz-setup card" id="quiz-setup">
+      <h3>Configure Your Quiz</h3>
+      <div class="setup-options">
+        <label class="setup-label">
+          <span>Number of Questions</span>
+          <select id="quiz-count">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+        </label>
+        <label class="setup-label">
+          <span>Difficulty</span>
+          <select id="quiz-difficulty">
+            <option value="all" selected>Mixed</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+      </div>
+      <button class="btn btn-accent" id="quiz-start">Start Quiz</button>
+    </div>
+
+    <div class="quiz-card card hidden" id="quiz-active">
+      <div class="quiz-progress">
+        <div class="progress-bar"><div class="progress-fill" id="quiz-progress-fill"></div></div>
+        <span class="quiz-counter" id="quiz-counter">1 / 10</span>
+      </div>
+      <span class="badge" id="quiz-topic-badge"></span>
+      <h3 id="quiz-question"></h3>
+      <div class="options-grid" id="quiz-options"></div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+      <button class="btn btn-primary" id="quiz-next-btn" style="display:none">Next</button>
+    </div>
+
+    <div class="quiz-results card hidden" id="quiz-results">
+      <h2>Quiz Results</h2>
+      <div class="result-score" id="result-score">0/10</div>
+      <div class="result-percentage" id="result-percentage">0%</div>
+      <p id="result-message"></p>
+      <div class="result-details" id="result-details"></div>
+      <button class="btn btn-primary" id="quiz-retry">Try Again</button>
+      <button class="btn btn-secondary" data-goto="dashboard">Back to Dashboard</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>English Mastery &copy; 2026 — Learn English, One Day at a Time</p>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
