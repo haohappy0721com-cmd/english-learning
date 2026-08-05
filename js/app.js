@@ -643,14 +643,14 @@ function initVocabulary() {
 
 function formatCatName(key) {
   const names = {
-    cet4_group1: 'CET-4 Group 1',
-    cet4_group2: 'CET-4 Group 2',
-    cet4_group3: 'CET-4 Group 3',
-    cet4_group4: 'CET-4 Group 4',
-    cet6_group1: 'CET-6 Group 1',
-    cet6_group2: 'CET-6 Group 2',
-    cet6_group3: 'CET-6 Group 3',
-    cet6_group4: 'CET-6 Group 4',
+    cet4_group1: 'CET-4 第1组',
+    cet4_group2: 'CET-4 第2组',
+    cet4_group3: 'CET-4 第3组',
+    cet4_group4: 'CET-4 第4组',
+    cet6_group1: 'CET-6 第1组',
+    cet6_group2: 'CET-6 第2组',
+    cet6_group3: 'CET-6 第3组',
+    cet6_group4: 'CET-6 第4组',
   };
   return names[key] || key;
 }
@@ -693,7 +693,7 @@ function renderCard() {
 
   const isLearned = state.vocabLearned.includes(word.word);
   const btn = qs('#btn-learned');
-  btn.textContent = isLearned ? 'Learned' : 'I Know This';
+  btn.textContent = isLearned ? '已掌握' : '我记住了';
   btn.disabled = isLearned;
 }
 
@@ -732,12 +732,17 @@ function initGrammar() {
   renderGrammarQuestion();
 }
 
+function formatGrammarCat(key) {
+  const names = { tenses: '时态', prepositions: '介词', articles: '冠词', conjunctions: '连词' };
+  return names[key] || key;
+}
+
 function renderGrammarCategories() {
   const container = qs('#grammar-categories');
   const cats = Object.keys(grammarData);
   container.innerHTML = cats.map(c =>
     '<button class="cat-tab' + (c === state.grammarCategory ? ' active' : '') +
-    '" data-cat="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</button>'
+    '" data-cat="' + c + '">' + formatGrammarCat(c) + '</button>'
   ).join('');
 
   container.querySelectorAll('.cat-tab').forEach(btn => {
@@ -790,18 +795,18 @@ function handleGrammarAnswer(idx) {
   if (idx === q.answer) {
     state.grammarScore++;
     buttons[idx].classList.add('correct');
-    feedback.textContent = 'Correct! ' + q.explanation;
+    feedback.textContent = '正确！' + q.explanation;
     feedback.className = 'quiz-feedback correct show';
   } else {
     buttons[idx].classList.add('wrong');
-    feedback.textContent = 'Incorrect. ' + q.explanation;
+    feedback.textContent = '错误。' + q.explanation;
     feedback.className = 'quiz-feedback wrong show';
   }
 
   qs('#grammar-progress-fill').style.width = ((state.grammarIndex + 1) / list.length * 100) + '%';
   const nextBtn = qs('#grammar-next');
   nextBtn.style.display = 'block';
-  nextBtn.textContent = state.grammarIndex < list.length - 1 ? 'Next Question' : 'Show Results';
+  nextBtn.textContent = state.grammarIndex < list.length - 1 ? '下一题' : '查看结果';
 
   nextBtn.onclick = () => {
     state.grammarIndex++;
@@ -821,15 +826,15 @@ function showGrammarResults() {
   saveStats();
   updateDashboard();
 
-  qs('#grammar-question').textContent = 'Results';
+  qs('#grammar-question').textContent = '结果';
   qs('#grammar-options').innerHTML = '';
-  qs('#grammar-feedback').textContent = 'You scored ' + state.grammarScore + '/' + list.length + ' (' + pct + '%)';
+  qs('#grammar-feedback').textContent = '你的得分：' + state.grammarScore + '/' + list.length + ' (' + pct + '%)';
   qs('#grammar-feedback').className = 'quiz-feedback ' + (pct >= 60 ? 'correct' : 'wrong') + ' show';
   qs('#grammar-counter').textContent = '';
   qs('#grammar-progress-fill').style.width = '100%';
   const nextBtn = qs('#grammar-next');
   nextBtn.style.display = 'block';
-  nextBtn.textContent = 'Try Again';
+  nextBtn.textContent = '再来一次';
   nextBtn.onclick = () => {
     state.grammarIndex = 0;
     state.grammarScore = 0;
@@ -846,12 +851,17 @@ function initReading() {
   renderReadingContent();
 }
 
+function formatReadingCat(key) {
+  const names = { easy: '简单', medium: '中等', hard: '困难' };
+  return names[key] || key;
+}
+
 function renderReadingCategories() {
   const container = qs('#reading-categories');
   const cats = Object.keys(readingData);
   container.innerHTML = cats.map(c =>
     '<button class="cat-tab' + (c === state.readingCategory ? ' active' : '') +
-    '" data-cat="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</button>'
+    '" data-cat="' + c + '">' + formatReadingCat(c) + '</button>'
   ).join('');
 
   container.querySelectorAll('.cat-tab').forEach(btn => {
@@ -876,7 +886,7 @@ function renderReadingQuestion() {
   const passage = readingData[state.readingCategory];
   const q = passage.questions[state.readingIndex];
 
-  qs('#reading-question').textContent = 'Question ' + (state.readingIndex + 1) + ': ' + q.question;
+  qs('#reading-question').textContent = '题目 ' + (state.readingIndex + 1) + ': ' + q.question;
   qs('#reading-counter').textContent = (state.readingIndex + 1) + ' / ' + passage.questions.length;
   qs('#reading-progress-fill').style.width = (state.readingIndex / passage.questions.length * 100) + '%';
 
@@ -907,18 +917,18 @@ function handleReadingAnswer(idx) {
   if (idx === q.answer) {
     state.readingScore++;
     buttons[idx].classList.add('correct');
-    feedback.textContent = 'Correct!';
+    feedback.textContent = '正确！';
     feedback.className = 'quiz-feedback correct show';
   } else {
     buttons[idx].classList.add('wrong');
-    feedback.textContent = 'Incorrect. The correct answer was: ' + q.options[q.answer];
+    feedback.textContent = '错误。正确答案是：' + q.options[q.answer];
     feedback.className = 'quiz-feedback wrong show';
   }
 
   qs('#reading-progress-fill').style.width = ((state.readingIndex + 1) / passage.questions.length * 100) + '%';
   const nextBtn = qs('#reading-next');
   nextBtn.style.display = 'block';
-  nextBtn.textContent = state.readingIndex < passage.questions.length - 1 ? 'Next Question' : 'Show Results';
+  nextBtn.textContent = state.readingIndex < passage.questions.length - 1 ? '下一题' : '查看结果';
 
   nextBtn.onclick = () => {
     state.readingIndex++;
@@ -938,15 +948,15 @@ function showReadingResults() {
   saveStats();
   updateDashboard();
 
-  qs('#reading-question').textContent = 'Results';
+  qs('#reading-question').textContent = '结果';
   qs('#reading-options').innerHTML = '';
-  qs('#reading-feedback').textContent = 'You scored ' + state.readingScore + '/' + passage.questions.length + ' (' + pct + '%)';
+  qs('#reading-feedback').textContent = '你的得分：' + state.readingScore + '/' + passage.questions.length + ' (' + pct + '%)';
   qs('#reading-feedback').className = 'quiz-feedback ' + (pct >= 60 ? 'correct' : 'wrong') + ' show';
   qs('#reading-counter').textContent = '';
   qs('#reading-progress-fill').style.width = '100%';
   const nextBtn = qs('#reading-next');
   nextBtn.style.display = 'block';
-  nextBtn.textContent = 'Try Again';
+  nextBtn.textContent = '再来一次';
   nextBtn.onclick = () => {
     state.readingIndex = 0;
     state.readingScore = 0;
@@ -965,12 +975,12 @@ function initQuizSetup() {
 function generateQuizQuestions(count, difficulty) {
   let grammarPool = [];
   Object.values(grammarData).forEach(arr => {
-    arr.forEach(q => grammarPool.push({ ...q, topic: 'Grammar' }));
+    arr.forEach(q => grammarPool.push({ ...q, topic: '语法' }));
   });
 
   let readingPool = [];
   Object.values(readingData).forEach(passage => {
-    passage.questions.forEach(q => readingPool.push({ ...q, topic: 'Reading' }));
+    passage.questions.forEach(q => readingPool.push({ ...q, topic: '阅读' }));
   });
 
   if (difficulty === 'easy') {
@@ -1033,19 +1043,19 @@ function handleQuizAnswer(idx) {
   if (idx === q.answer) {
     state.quizScore++;
     buttons[idx].classList.add('correct');
-    feedback.textContent = 'Correct!';
+    feedback.textContent = '正确！';
     feedback.className = 'quiz-feedback correct show';
   } else {
     buttons[idx].classList.add('wrong');
-    const expl = q.explanation || ('The correct answer was: ' + q.options[q.answer]);
-    feedback.textContent = 'Incorrect. ' + expl;
+    const expl = q.explanation || ('正确答案是：' + q.options[q.answer]);
+    feedback.textContent = '错误。' + expl;
     feedback.className = 'quiz-feedback wrong show';
   }
 
   qs('#quiz-progress-fill').style.width = ((state.quizIndex + 1) / state.quizTotal * 100) + '%';
   const nextBtn = qs('#quiz-next-btn');
   nextBtn.style.display = 'block';
-  nextBtn.textContent = state.quizIndex < state.quizTotal - 1 ? 'Next' : 'Show Results';
+  nextBtn.textContent = state.quizIndex < state.quizTotal - 1 ? '下一题' : '查看结果';
 
   nextBtn.onclick = () => {
     state.quizIndex++;
@@ -1071,15 +1081,15 @@ function showQuizResults() {
   qs('#result-percentage').textContent = pct + '%';
 
   let message = '';
-  if (pct >= 80) message = 'Excellent work! You have a strong command of English.';
-  else if (pct >= 60) message = 'Good job! Keep practicing to improve further.';
-  else message = 'Keep studying! Regular practice will help you improve.';
+  if (pct >= 80) message = '太棒了！你的英语水平非常扎实！';
+  else if (pct >= 60) message = '不错！继续练习，会越来越好。';
+  else message = '继续加油！坚持练习一定会有进步的。';
   qs('#result-message').textContent = message;
 
   qs('#result-details').innerHTML = state.quizQuestions.map((q, i) =>
     '<div class="result-item">' +
     '<span class="icon">' + '📝' + '</span>' +
-    '<span class="text">' + q.question + '<br><small>Answer: ' + q.options[q.answer] + '</small></span>' +
+    '<span class="text">' + q.question + '<br><small>答案：' + q.options[q.answer] + '</small></span>' +
     '</div>'
   ).join('');
 }
