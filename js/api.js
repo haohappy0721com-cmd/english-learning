@@ -2,7 +2,10 @@
 // API Client - Communicates with the Express backend
 // ============================================================
 
-const API_BASE = 'http://localhost:3000/api';
+// Auto-detect: use cloud API on GitHub Pages, localhost otherwise
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000/api'
+  : 'https://english-learning-server.onrender.com/api';
 let authToken = localStorage.getItem('authToken');
 let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
