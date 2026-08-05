@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 - 英语大师</title>
+<style>
+  :root {
+    --bg: #f8f9fa; --surface: #fff; --text: #212529;
+    --text-secondary: #6c757d; --border: #dee2e6;
+    --primary: #4c6ef5; --success: #40c057; --danger: #fa5252;
+    --radius: 10px;
+  }
+  [data-theme="dark"] {
+    --bg: #1a1b1e; --surface: #25262b; --text: #e9ecef;
+    --text-secondary: #adb5bd; --border: #373a40;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .admin-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 10; }
+  .admin-header h1 { font-size: 1.2rem; }
+  .admin-header .actions { display: flex; gap: 8px; align-items: center; }
+  .btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.15s; }
+  .btn:hover { background: var(--border); }
+  .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .search-box { flex: 1; min-width: 200px; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.9rem; }
+  select { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.9rem; }
+  .stats-bar { display: flex; gap: 16px; margin-bottom: 20px; }
+  .stat-chip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 20px; text-align: center; }
+  .stat-chip .num { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+  .stat-chip .lbl { font-size: 0.8rem; color: var(--text-secondary); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  th { background: var(--bg); font-weight: 600; color: var(--text-secondary); }
+  tr:hover td { background: var(--bg); }
+  .word-cell { font-weight: 600; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .modal { background: var(--surface); border-radius: 12px; padding: 28px; width: 90%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 4px; color: var(--text-secondary); }
+  .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.9rem; font-family: inherit; }
+  .form-group textarea { min-height: 60px; resize: vertical; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 20px; align-items: center; }
+  .page-info { color: var(--text-secondary); font-size: 0.85rem; }
+  .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 24px; border-radius: 8px; color: #fff; font-weight: 500; z-index: 200; animation: slideUp 0.3s ease; }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Auth */
+  .auth-container { max-width: 400px; margin: 80px auto; }
+  .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+  .auth-card h2 { text-align: center; margin-bottom: 24px; }
+  .auth-card .form-group { margin-bottom: 16px; }
+  .auth-card .btn { width: 100%; margin-top: 8px; }
+  .auth-toggle { text-align: center; margin-top: 16px; color: var(--text-secondary); font-size: 0.9rem; }
+  .auth-toggle a { color: var(--primary); cursor: pointer; text-decoration: none; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="admin-header">
+  <h1>英语大师 - 管理后台</h1>
+  <div class="actions">
+    <span id="adminUser" style="color: var(--text-secondary); font-size: 0.85rem;"></span>
+    <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="btn" onclick="location.href='/'">返回网站</button>
+    <button class="btn btn-danger" onclick="logout()">退出</button>
+  </div>
+</div>
+
+<!-- Login/Register -->
+<div id="authPage" class="auth-container">
+  <div class="auth-card">
+    <h2 id="authTitle">管理员登录</h2>
+    <div id="authError" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 12px; display:none;"></div>
+    <div class="form-group hidden" id="emailGroup">
+      <label>邮箱</label>
+      <input type="email" id="authEmail" placeholder="请输入邮箱">
+    </div>
+    <div class="form-group">
+      <label>用户名</label>
+      <input type="text" id="authUsername" placeholder="请输入用户名">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="authPassword" placeholder="请输入密码">
+    </div>
+    <button class="btn btn-primary" onclick="handleAuth()" id="authBtn">登录</button>
+    <p class="auth-toggle">
+      <span id="authToggleText">没有账号？</span>
+      <a onclick="toggleAuthMode()" id="authToggleLink">去注册</a>
+    </p>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="container hidden">
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="toolbar">
+    <input type="text" class="search-box" id="searchInput" placeholder="搜索单词或释义..." oninput="loadWords()">
+    <select id="filterCategory" onchange="loadWords()">
+      <option value="">全部分类</option>
+    </select>
+    <button class="btn btn-primary" onclick="openAddModal()">+ 添加单词</button>
+    <button class="btn btn-success" onclick="openBatchModal()">批量导入</button>
+  </div>
+  <table id="wordsTable">
+    <thead>
+      <tr>
+        <th>单词</th><th>音标</th><th>词性</th><th>释义</th><th>分类</th><th>级别</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="wordsBody"></tbody>
+  </table>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay hidden" id="wordModal">
+  <div class="modal">
+    <h2 id="modalTitle">添加单词</h2>
+    <div class="form-group"><label>单词 *</label><input type="text" id="editWord"></div>
+    <div class="form-group"><label>音标</label><input type="text" id="editPhonetic"></div>
+    <div class="form-group"><label>词性</label><input type="text" id="editPos"></div>
+    <div class="form-group"><label>释义 *</label><textarea id="editMeaning"></textarea></div>
+    <div class="form-group"><label>例句</label><textarea id="editExample"></textarea></div>
+    <div class="form-group"><label>级别</label><select id="editLevel"><option value="CET-4">CET-4</option><option value="CET-6">CET-6</option></select></div>
+    <div class="form-group"><label>分类</label><select id="editCategory"><option value="cet4_group1">CET-4 第1组</option><option value="cet4_group2">CET-4 第2组</option><option value="cet4_group3">CET-4 第3组</option><option value="cet4_group4">CET-4 第4组</option><option value="cet6_group1">CET-6 第1组</option><option value="cet6_group2">CET-6 第2组</option><option value="cet6_group3">CET-6 第3组</option><option value="cet6_group4">CET-6 第4组</option></select></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveWord()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Batch Import Modal -->
+<div class="modal-overlay hidden" id="batchModal">
+  <div class="modal">
+    <h2>批量导入单词</h2>
+    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">每行一个单词，格式: 单词 | 音标 | 词性 | 释义 | 例句 | 级别 | 分类</p>
+    <div class="form-group"><textarea id="batchText" rows="10" placeholder="abandon | /əˈbændən/ | v. | 放弃 | They abandoned the plan. | CET-4 | cet4_group1"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeBatchModal()">取消</button>
+      <button class="btn btn-primary" onclick="batchImport()">导入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000/api';
+let token = localStorage.getItem('adminToken');
+let currentPage = 1, totalPages = 1, editingId = null, isRegister = false;
+
+// Toast
+function showToast(msg, type) {
+  const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// Auth
+function toggleAuthMode() {
+  isRegister = !isRegister;
+  document.getElementById('authTitle').textContent = isRegister ? '管理员注册' : '管理员登录';
+  document.getElementById('authBtn').textContent = isRegister ? '注册' : '登录';
+  document.getElementById('authToggleText').textContent = isRegister ? '已有账号？' : '没有账号？';
+  document.getElementById('authToggleLink').textContent = isRegister ? '去登录' : '去注册';
+  document.getElementById('emailGroup').classList.toggle('hidden', !isRegister);
+  document.getElementById('authError').style.display = 'none';
+}
+
+async function handleAuth() {
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  const email = document.getElementById('authEmail').value.trim();
+  const errorEl = document.getElementById('authError');
+
+  const url = isRegister ? `${API}/auth/register` : `${API}/auth/login`;
+  const body = isRegister ? { username, email, password } : { username, password };
+
+  try {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) { errorEl.textContent = data.error; errorEl.style.display = 'block'; return; }
+
+    token = data.token;
+    localStorage.setItem('adminToken', token);
+    errorEl.style.display = 'none';
+    showAdmin();
+  } catch (e) {
+    errorEl.textContent = '网络错误，请重试';
+    errorEl.style.display = 'block';
+  }
+}
+
+function logout() { localStorage.removeItem('adminToken'); token = null; document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('authPage').classList.remove('hidden'); }
+
+// Admin panel
+function showAdmin() {
+  document.getElementById('authPage').classList.add('hidden');
+  document.getElementById('adminPanel').classList.remove('hidden');
+  loadWords(); loadStats(); loadCategories();
+  fetch(`${API}/auth/me`, { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(r => r.json()).then(d => { if (d.user) document.getElementById('adminUser').textContent = d.user.username; });
+}
+
+async function loadStats() {
+  const res = await fetch(`${API}/stats/dashboard`, { headers: { 'Authorization': 'Bearer ' + token } });
+  const data = await res.json();
+  const s = data.totalStats || {};
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-chip"><div class="num">${s.total_words || 0}</div><div class="lbl">总词汇量</div></div>
+    <div class="stat-chip"><div class="num">${s.learned_words || 0}</div><div class="lbl">已学习</div></div>
+    <div class="stat-chip"><div class="num">${s.total_study_days || 0}</div><div class="lbl">学习天数</div></div>
+    <div class="stat-chip"><div class="num">${s.total_quizzes || 0}</div><div class="lbl">测验次数</div></div>
+    <div class="stat-chip"><div class="num">${s.overall_accuracy || 0}%</div><div class="lbl">正确率</div></div>
+  `;
+}
+
+async function loadCategories() {
+  const res = await fetch(`${API}/vocabulary/categories`);
+  const data = await res.json();
+  const sel = document.getElementById('filterCategory');
+  data.categories.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+}
+
+async function loadWords() {
+  const search = document.getElementById('searchInput').value;
+  const category = document.getElementById('filterCategory').value;
+  const params = new URLSearchParams({ limit: 20, offset: (currentPage - 1) * 20 });
+  if (search) params.set('search', search);
+  if (category) params.set('category', category);
+
+  const res = await fetch(`${API}/vocabulary?${params}`, { headers: { 'Authorization': 'Bearer ' + token } });
+  const data = await res.json();
+
+  totalPages = Math.ceil(data.total / 20) || 1;
+  document.getElementById('wordsBody').innerHTML = data.words.map(w => `
+    <tr>
+      <td class="word-cell">${w.word}</td>
+      <td>${w.phonetic || ''}</td>
+      <td>${w.pos || ''}</td>
+      <td>${w.meaning || ''}</td>
+      <td>${w.category || ''}</td>
+      <td><span class="badge">${w.level || ''}</span></td>
+      <td>
+        <button class="btn" onclick="openEditModal(${w.id}, '${w.word}', '${(w.phonetic||'').replace(/'/g, "\'")}', '${(w.pos||'').replace(/'/g, "\'")}', \`${(w.meaning||'').replace(/`/g,'\\`').replace(/'/g, "\'")}\`, \`${(w.example||'').replace(/`/g,'\\`').replace(/'/g, "\'")}\`, '${w.level||''}', '${w.category||''}')">编辑</button>
+        <button class="btn btn-danger" onclick="deleteWord(${w.id})">删除</button>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('pagination').innerHTML = `
+    <button class="btn" onclick="goPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+    <span class="page-info">第 ${currentPage} / ${totalPages} 页 (共 ${data.total} 词)</span>
+    <button class="btn" onclick="goPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>
+  `;
+}
+
+function goPage(p) { if (p >= 1 && p <= totalPages) { currentPage = p; loadWords(); } }
+
+// Word CRUD
+function openAddModal() { editingId = null; document.getElementById('modalTitle').textContent = '添加单词'; clearForm(); document.getElementById('wordModal').classList.remove('hidden'); }
+
+function openEditModal(id, word, phonetic, pos, meaning, example, level, category) {
+  editingId = id;
+  document.getElementById('modalTitle').textContent = '编辑单词';
+  document.getElementById('editWord').value = word;
+  document.getElementById('editPhonetic').value = phonetic;
+  document.getElementById('editPos').value = pos;
+  document.getElementById('editMeaning').value = meaning;
+  document.getElementById('editExample').value = example;
+  document.getElementById('editLevel').value = level || 'CET-4';
+  document.getElementById('editCategory').value = category || '';
+  document.getElementById('wordModal').classList.remove('hidden');
+}
+
+function closeModal() { document.getElementById('wordModal').classList.add('hidden'); }
+
+function clearForm() {
+  ['editWord','editPhonetic','editPos','editMeaning','editExample'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function saveWord() {
+  const word = document.getElementById('editWord').value.trim();
+  const meaning = document.getElementById('editMeaning').value.trim();
+  if (!word || !meaning) { showToast('单词和释义不能为空', 'error'); return; }
+
+  const body = {
+    word, meaning,
+    phonetic: document.getElementById('editPhonetic').value.trim(),
+    pos: document.getElementById('editPos').value.trim(),
+    example: document.getElementById('editExample').value.trim(),
+    level: document.getElementById('editLevel').value,
+    category: document.getElementById('editCategory').value,
+  };
+
+  const url = editingId ? `${API}/vocabulary/${editingId}` : `${API}/vocabulary`;
+  const method = editingId ? 'PUT' : 'POST';
+
+  const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (res.ok) {
+    showToast(editingId ? '更新成功' : '添加成功', 'success');
+    closeModal();
+    loadWords();
+    loadStats();
+  } else {
+    showToast(data.error || '操作失败', 'error');
+  }
+}
+
+async function deleteWord(id) {
+  if (!confirm('确定要删除这个单词吗？')) return;
+  const res = await fetch(`${API}/vocabulary/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+  if (res.ok) { showToast('删除成功', 'success'); loadWords(); loadStats(); }
+  else { showToast('删除失败', 'error'); }
+}
+
+// Batch import
+function openBatchModal() { document.getElementById('batchModal').classList.remove('hidden'); }
+function closeBatchModal() { document.getElementById('batchModal').classList.add('hidden'); }
+
+async function batchImport() {
+  const text = document.getElementById('batchText').value.trim();
+  if (!text) { showToast('请输入单词数据', 'error'); return; }
+
+  const words = text.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(p => p.trim());
+    return { word: parts[0] || '', phonetic: parts[1] || '', pos: parts[2] || '', meaning: parts[3] || '', example: parts[4] || '', level: parts[5] || 'CET-4', category: parts[6] || '' };
+  }).filter(w => w.word && w.meaning);
+
+  const res = await fetch(`${API}/vocabulary/batch`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ words }) });
+  const data = await res.json();
+  if (res.ok) {
+    showToast(data.message, 'success');
+    closeBatchModal();
+    loadWords();
+    loadStats();
+  } else {
+    showToast(data.error, 'error');
+  }
+}
+
+// Theme
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('adminTheme', isDark ? 'light' : 'dark');
+}
+
+// Init
+if (token) { showAdmin(); }
+const savedTheme = localStorage.getItem('adminTheme');
+if (savedTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.getElementById('themeBtn').textContent = '☀️'; }
+</script>
+</body>
+</html>

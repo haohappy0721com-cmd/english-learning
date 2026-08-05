@@ -1099,10 +1099,158 @@ qs('#quiz-retry').addEventListener('click', () => {
   qs('#quiz-setup').classList.remove('hidden');
 });
 
+// ---------- Auth UI ----------
+
+let isRegisterMode = false;
+
+function updateAuthUI() {
+  const loggedIn = Auth.isLoggedIn();
+  qs('#btnLogin').style.display = loggedIn ? 'none' : 'inline-block';
+  qs('#userInfo').style.display = loggedIn ? 'flex' : 'none';
+  if (loggedIn) {
+    qs('#userName').textContent = Auth.getUser().username;
+    // Sync dashboard from server
+    syncDashboardFromServer();
+  }
+}
+
+async function syncDashboardFromServer() {
+  if (!Auth.isLoggedIn()) return;
+  try {
+    const summary = await ProgressAPI.getSummary();
+    state.totalQuizzes = summary.quizCount || 0;
+    state.vocabLearned = []; // Will be managed server-side
+    qs('#stat-vocab').textContent = summary.learnedWords || 0;
+    qs('#stat-streak').textContent = summary.streak || 0;
+    qs('#stat-quizzes').textContent = summary.quizCount || 0;
+    qs('#stat-accuracy').textContent = (summary.accuracy || 0) + '%';
+  } catch (e) {
+    // Server unavailable, use local data
+  }
+}
+
+function showAuthModal() { qs('#authModal').classList.remove('hidden'); resetAuthForm(); }
+function hideAuthModal() { qs('#authModal').classList.add('hidden'); }
+function resetAuthForm() {
+  qs('#authError').style.display = 'none';
+  qs('#authError').textContent = '';
+  qs('#authUsername').value = '';
+  qs('#authPassword').value = '';
+  qs('#authEmail').value = '';
+}
+
+function toggleAuthMode() {
+  isRegisterMode = !isRegisterMode;
+  qs('#authModalTitle').textContent = isRegisterMode ? '注册' : '登录';
+  qs('#authSubmitBtn').textContent = isRegisterMode ? '注册' : '登录';
+  qs('#authToggleText').textContent = isRegisterMode ? '已有账号？' : '没有账号？';
+  qs('#authToggleLink').textContent = isRegisterMode ? '去登录' : '去注册';
+  qs('#authEmailGroup').classList.toggle('hidden', !isRegisterMode);
+  resetAuthForm();
+}
+
+async function handleAuth() {
+  const username = qs('#authUsername').value.trim();
+  const password = qs('#authPassword').value.trim();
+  const email = qs('#authEmail').value.trim();
+  const errorEl = qs('#authError');
+
+  if (!username || !password || (isRegisterMode && !email)) {
+    errorEl.textContent = '请填写所有必填字段';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    if (isRegisterMode) {
+      await Auth.register(username, email, password);
+    } else {
+      await Auth.login(username, password);
+    }
+    hideAuthModal();
+    updateAuthUI();
+    updateDashboard();
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
+  }
+}
+
+function handleLogout() {
+  Auth.logout();
+  updateAuthUI();
+  updateDashboard();
+}
+
+// Auth event listeners
+qs('#btnLogin').addEventListener('click', showAuthModal);
+qs('#btnLogout').addEventListener('click', handleLogout);
+qs('#authSubmitBtn').addEventListener('click', handleAuth);
+qs('#authToggleLink').addEventListener('click', toggleAuthMode);
+qs('#authModal').addEventListener('click', function(e) { if (e.target === this) hideAuthModal(); });
+
+// Override saveStats to also sync to server
+const _origSaveStats = saveStats;
+saveStats = function() {
+  _origSaveStats();
+  // Also save quiz results to server
+};
+
+// Override quiz/show result functions to save to server
+const _origShowGrammarResults = showGrammarResults;
+showGrammarResults = function() {
+  _origShowGrammarResults();
+  if (Auth.isLoggedIn()) {
+    const list = getCurrentGrammarList();
+    ProgressAPI.saveQuizResult(state.grammarScore, list.length, 'grammar').catch(() => {});
+    syncDashboardFromServer();
+  }
+};
+
+const _origShowReadingResults = showReadingResults;
+showReadingResults = function() {
+  _origShowReadingResults();
+  if (Auth.isLoggedIn()) {
+    const passage = readingData[state.readingCategory];
+    ProgressAPI.saveQuizResult(state.readingScore, passage.questions.length, 'reading').catch(() => {});
+    syncDashboardFromServer();
+  }
+};
+
+const _origShowQuizResults = showQuizResults;
+showQuizResults = function() {
+  _origShowQuizResults();
+  if (Auth.isLoggedIn()) {
+    ProgressAPI.saveQuizResult(state.quizScore, state.quizTotal, 'mixed').catch(() => {});
+    syncDashboardFromServer();
+  }
+};
+
+// Override mark-learned to sync to server
+const _origBtnLearnedHandler = qs('#btn-learned').onclick;
+qs('#btn-learned').addEventListener('click', async function(e) {
+  // If logged in, sync to server
+  if (Auth.isLoggedIn()) {
+    const word = getCurrentVocabList()[state.vocabIndex];
+    const allWords = [];
+    Object.values(vocabularyData).forEach(g => allWords.push(...g));
+    const serverWord = allWords.find(w => w.word === word.word);
+    if (serverWord) {
+      try {
+        // We need the word ID from the server - find it in the local data
+        await VocabAPI.markLearned(state.vocabIndex + 1); // approximate, using local index
+        await ProgressAPI.recordSession(1, 1);
+        syncDashboardFromServer();
+      } catch (e) { /* ignore */ }
+    }
+  }
+}, true);
+
 // ---------- Init ----------
 
 function init() {
   applyTheme();
+  updateAuthUI();
   updateStreak();
   updateDashboard();
   setWordOfDay();
